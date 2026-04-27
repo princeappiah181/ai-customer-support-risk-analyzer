@@ -4,9 +4,38 @@ import torch
 import torch.nn as nn
 import pandas as pd
 
+import os
+import requests
+import zipfile
+
+
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
+
+
+MODEL_URL = "PASTE_YOUR_GOOGLE_DRIVE_DIRECT_LINK"
+MODEL_ZIP_PATH = "model.zip"
+MODEL_DIR = "models/hybrid_distilbert_tabular"
+
+
+def download_model():
+    if not os.path.exists(MODEL_DIR):
+        print("Downloading model...")
+
+        r = requests.get(MODEL_URL)
+        with open(MODEL_ZIP_PATH, "wb") as f:
+            f.write(r.content)
+
+        with zipfile.ZipFile(MODEL_ZIP_PATH, "r") as zip_ref:
+            zip_ref.extractall("models/")
+
+        print("Model downloaded and extracted.")
+
+
+download_model()
+
 
 
 MODEL_NAME = "distilbert-base-uncased"
