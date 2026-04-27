@@ -8,7 +8,7 @@ import os
 import requests
 import zipfile
 
-
+from huggingface_hub import snapshot_download
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -16,9 +16,12 @@ from transformers import AutoTokenizer, AutoModel
 
 
 
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1P8rOZWwiIAAMbrses8yQ031cS_P6w9b9"
-MODEL_ZIP_PATH = "model.zip"
-MODEL_DIR = "models/hybrid_distilbert_tabular"
+
+MODEL_DIR = snapshot_download(
+    repo_id="princeappiah181/customer-support-risk-model",
+    local_dir="models/hybrid_distilbert_tabular",
+    local_dir_use_symlinks=False
+)
 
 
 def download_model():
