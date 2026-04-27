@@ -15,8 +15,9 @@ from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
 
 
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1H8_IlmISqW8CtuakYVNFjJilizMHZOH_"
-MODEL_ZIP_PATH = "models.zip"
+
+MODEL_URL = "https://drive.google.com/uc?export=download&id=1P8rOZWwiIAAMbrses8yQ031cS_P6w9b9"
+MODEL_ZIP_PATH = "model.zip"
 MODEL_DIR = "models/hybrid_distilbert_tabular"
 
 
