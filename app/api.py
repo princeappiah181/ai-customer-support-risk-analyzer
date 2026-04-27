@@ -4,46 +4,15 @@ import torch
 import torch.nn as nn
 import pandas as pd
 
-import os
-import requests
-import zipfile
-
-from huggingface_hub import snapshot_download
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
+from huggingface_hub import snapshot_download
 
 
-
-
-MODEL_DIR = snapshot_download(
-    repo_id="princeappiah181/customer-support-risk-model",
-    local_dir="models/hybrid_distilbert_tabular",
-    local_dir_use_symlinks=False
-)
-
-
-def download_model():
-    if not os.path.exists(MODEL_DIR):
-        print("Downloading model...")
-
-        r = requests.get(MODEL_URL)
-        with open(MODEL_ZIP_PATH, "wb") as f:
-            f.write(r.content)
-
-        with zipfile.ZipFile(MODEL_ZIP_PATH, "r") as zip_ref:
-            zip_ref.extractall("models/")
-
-        print("Model downloaded and extracted.")
-
-
-download_model()
-
-
-
+HF_REPO_ID = "princeappiah181/customer-support-risk-model"
+LOCAL_MODEL_DIR = "models/hybrid_distilbert_tabular"
 MODEL_NAME = "distilbert-base-uncased"
-MODEL_DIR = "models/hybrid_distilbert_tabular"
 
 NUMERIC_COLS = [
     "customer_age",
@@ -66,6 +35,20 @@ CATEGORICAL_COLS = [
     "preferred_contact_time",
     "customer_segment",
 ]
+
+
+def load_model_from_huggingface():
+    hf_token = os.getenv("HF_TOKEN")
+
+    return snapshot_download(
+        repo_id=HF_REPO_ID,
+        repo_type="model",
+        local_dir=LOCAL_MODEL_DIR,
+        token=hf_token,
+    )
+
+
+MODEL_DIR = load_model_from_huggingface()
 
 
 class HybridDistilBERT(nn.Module):
@@ -111,7 +94,6 @@ class TicketInput(BaseModel):
     customer_tenure_months: int
     previous_tickets: int
     issue_complexity_score: int
-
     product: str
     category: str
     channel: str
@@ -128,20 +110,11 @@ class TicketInput(BaseModel):
 
 def get_recommended_action(risk: str) -> str:
     if risk == "Critical":
-        return (
-            "Escalate immediately to a human support specialist. "
-            "Recommended SLA: respond within 5 minutes."
-        )
+        return "Escalate immediately to a human support specialist. Recommended SLA: respond within 5 minutes."
     elif risk == "Medium":
-        return (
-            "Prioritize for same-day resolution. "
-            "Recommended SLA: respond within 1 hour."
-        )
+        return "Prioritize for same-day resolution. Recommended SLA: respond within 1 hour."
     else:
-        return (
-            "Handle through the standard support queue. "
-            "Recommended SLA: respond within 24 hours."
-        )
+        return "Handle through the standard support queue. Recommended SLA: respond within 24 hours."
 
 
 def generate_explanation(ticket: TicketInput, risk: str) -> str:
@@ -155,9 +128,6 @@ def generate_explanation(ticket: TicketInput, risk: str) -> str:
 
     if ticket.customer_tenure_months < 6:
         reasons.append("new customer with low tenure")
-
-    if ticket.customer_age >= 60:
-        reasons.append("older customer profile may require extra support attention")
 
     urgent_words = [
         "urgent",
@@ -173,15 +143,10 @@ def generate_explanation(ticket: TicketInput, risk: str) -> str:
     ]
 
     text_lower = ticket.issue_description.lower()
-
-    matched_words = [
-        word for word in urgent_words if word in text_lower
-    ]
+    matched_words = [word for word in urgent_words if word in text_lower]
 
     if matched_words:
-        reasons.append(
-            "urgent language detected: " + ", ".join(matched_words[:3])
-        )
+        reasons.append("urgent language detected: " + ", ".join(matched_words[:3]))
 
     if not reasons:
         reasons.append("general ticket characteristics")
@@ -190,35 +155,6 @@ def generate_explanation(ticket: TicketInput, risk: str) -> str:
 
 
 def generate_shap_style_explanation(ticket: TicketInput, risk: str):
-    """
-    Lightweight SHAP-style explanation.
-    This is not full SHAP. It gives interpretable directional drivers
-    based on the same business features used by the risk system.
-    """
-
-    drivers = []
-
-    drivers.append({
-        "feature": "issue_complexity_score",
-        "value": ticket.issue_complexity_score,
-        "impact": "high" if ticket.issue_complexity_score >= 7 else "moderate" if ticket.issue_complexity_score >= 4 else "low",
-        "direction": "increases risk" if ticket.issue_complexity_score >= 7 else "neutral/moderate risk contribution",
-    })
-
-    drivers.append({
-        "feature": "previous_tickets",
-        "value": ticket.previous_tickets,
-        "impact": "high" if ticket.previous_tickets >= 5 else "moderate" if ticket.previous_tickets >= 2 else "low",
-        "direction": "increases risk" if ticket.previous_tickets >= 5 else "limited risk contribution",
-    })
-
-    drivers.append({
-        "feature": "customer_tenure_months",
-        "value": ticket.customer_tenure_months,
-        "impact": "high" if ticket.customer_tenure_months < 6 else "moderate" if ticket.customer_tenure_months < 18 else "low",
-        "direction": "increases risk for newer customers" if ticket.customer_tenure_months < 6 else "reduces/normalizes risk",
-    })
-
     text_lower = ticket.issue_description.lower()
 
     text_risk_terms = [
@@ -234,17 +170,35 @@ def generate_shap_style_explanation(ticket: TicketInput, risk: str):
 
     matched_terms = [term for term in text_risk_terms if term in text_lower]
 
-    drivers.append({
-        "feature": "issue_description",
-        "value": matched_terms if matched_terms else "no major urgent terms detected",
-        "impact": "high" if matched_terms else "low",
-        "direction": "increases risk" if matched_terms else "limited text-based risk signal",
-    })
-
     return {
         "method": "rule-guided SHAP-style explanation",
         "note": "This is a lightweight interpretable explanation, not full SHAP computation.",
-        "top_drivers": drivers,
+        "top_drivers": [
+            {
+                "feature": "issue_complexity_score",
+                "value": ticket.issue_complexity_score,
+                "impact": "high" if ticket.issue_complexity_score >= 7 else "moderate" if ticket.issue_complexity_score >= 4 else "low",
+                "direction": "increases risk" if ticket.issue_complexity_score >= 7 else "moderate/low risk contribution",
+            },
+            {
+                "feature": "previous_tickets",
+                "value": ticket.previous_tickets,
+                "impact": "high" if ticket.previous_tickets >= 5 else "moderate" if ticket.previous_tickets >= 2 else "low",
+                "direction": "increases risk" if ticket.previous_tickets >= 5 else "limited risk contribution",
+            },
+            {
+                "feature": "customer_tenure_months",
+                "value": ticket.customer_tenure_months,
+                "impact": "high" if ticket.customer_tenure_months < 6 else "moderate" if ticket.customer_tenure_months < 18 else "low",
+                "direction": "increases risk for newer customers" if ticket.customer_tenure_months < 6 else "reduces/normalizes risk",
+            },
+            {
+                "feature": "issue_description",
+                "value": matched_terms if matched_terms else "no major urgent terms detected",
+                "impact": "high" if matched_terms else "low",
+                "direction": "increases risk" if matched_terms else "limited text-based risk signal",
+            },
+        ],
         "summary": generate_explanation(ticket, risk),
     }
 
@@ -341,10 +295,7 @@ def predict(ticket: TicketInput):
     if hasattr(tabular_features, "toarray"):
         tabular_features = tabular_features.toarray()
 
-    tabular_tensor = torch.tensor(
-        tabular_features,
-        dtype=torch.float32,
-    ).to(device)
+    tabular_tensor = torch.tensor(tabular_features, dtype=torch.float32).to(device)
 
     encoding = tokenizer(
         ticket.issue_description,
@@ -367,17 +318,12 @@ def predict(ticket: TicketInput):
         probabilities = torch.softmax(logits, dim=1)
         confidence, predicted_class = torch.max(probabilities, dim=1)
 
-    risk = label_encoder.inverse_transform(
-        [predicted_class.cpu().item()]
-    )[0]
-
-    explanation = generate_explanation(ticket, risk)
-    shap_style_explanation = generate_shap_style_explanation(ticket, risk)
+    risk = label_encoder.inverse_transform([predicted_class.cpu().item()])[0]
 
     return {
         "risk": risk,
         "confidence": round(confidence.cpu().item(), 4),
         "recommended_action": get_recommended_action(risk),
-        "explanation": explanation,
-        "shap_style_explanation": shap_style_explanation,
+        "explanation": generate_explanation(ticket, risk),
+        "shap_style_explanation": generate_shap_style_explanation(ticket, risk),
     }
