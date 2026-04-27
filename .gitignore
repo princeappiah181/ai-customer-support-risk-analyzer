@@ -2,8 +2,9 @@ venv/
 __pycache__/
 *.pyc
 
-data/
 models/
-
+models.zip
+*.zip
+data/
+venv/
 .DS_Store
-.env
