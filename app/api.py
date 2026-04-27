@@ -15,8 +15,8 @@ from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
 
 
-MODEL_URL = "PASTE_YOUR_GOOGLE_DRIVE_DIRECT_LINK"
-MODEL_ZIP_PATH = "model.zip"
+MODEL_URL = "https://drive.google.com/file/d/1H8_IlmISqW8CtuakYVNFjJilizMHZOH_/view?usp=sharing"
+MODEL_ZIP_PATH = "models.zip"
 MODEL_DIR = "models/hybrid_distilbert_tabular"
 
 
