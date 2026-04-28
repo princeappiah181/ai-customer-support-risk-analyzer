@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
 from huggingface_hub import snapshot_download
@@ -36,6 +36,21 @@ CATEGORICAL_COLS = [
     "customer_segment",
 ]
 
+
+API_KEYS = {
+    "free-demo-key": "free",
+    "pro-demo-key": "pro",
+}
+
+
+def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key is None:
+        raise HTTPException(status_code=401, detail="Missing API key")
+
+    if x_api_key not in API_KEYS:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    return API_KEYS[x_api_key]
 
 def load_model_from_huggingface():
     hf_token = os.getenv("HF_TOKEN")
@@ -270,7 +285,8 @@ def health_check():
 
 
 @app.post("/predict")
-def predict(ticket: TicketInput):
+def predict(ticket: TicketInput, x_api_key: str = Header(None)):
+    plan = verify_api_key(x_api_key)
     tabular_data = pd.DataFrame([{
         "customer_age": ticket.customer_age,
         "customer_tenure_months": ticket.customer_tenure_months,
@@ -326,4 +342,5 @@ def predict(ticket: TicketInput):
         "recommended_action": get_recommended_action(risk),
         "explanation": generate_explanation(ticket, risk),
         "shap_style_explanation": generate_shap_style_explanation(ticket, risk),
+        "plan": plan,
     }
