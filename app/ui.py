@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-API_URL = "http://127.0.0.1:8000/predict"
+API_URL = "http://127.0.0.1:8001/predict"
 
 st.set_page_config(
     page_title="AI Support Risk Analyzer",
