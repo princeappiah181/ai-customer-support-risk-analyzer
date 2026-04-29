@@ -1,77 +1,43 @@
-# AI Customer Support Risk Analyzer
+# 🤖 AI Customer Support Risk Analyzer
 
-End-to-End AI System for Predicting and Prioritizing Customer Support Tickets
-Hybrid NLP + Tabular Deep Learning • FastAPI • Streamlit • Explainable AI
+> End-to-end AI system for predicting and prioritizing customer support tickets using Hybrid NLP + Tabular Deep Learning
 
-------------------------------------------------------------
+---
 
-OVERVIEW
+## 🚀 Overview
 
-This project is a production-style AI system that predicts the risk level of customer support tickets in real time using a hybrid deep learning architecture (DistilBERT + tabular features).
+This project builds a production-style AI system that classifies customer support tickets into:
 
-It goes beyond prediction by providing:
-- Actionable recommendations (SLA-based)
-- Explainability (human + SHAP-style)
-- Batch processing
-- Dashboard analytics
-- Alert system
-- SaaS-ready API design
+- 🔴 Critical → Immediate escalation (5 min SLA)
+- 🟡 Medium → Same-day handling (1 hour SLA)
+- 🟢 Low → Standard queue (24-hour SLA)
 
-------------------------------------------------------------
+The system combines:
+- DistilBERT (text understanding)
+- Tabular features (customer + ticket metadata)
+- FastAPI backend
+- Streamlit dashboard
 
-FEATURES
+---
 
-- Single Ticket Prediction
-- Batch CSV Processing
-- Explainable AI Outputs
-- Recommended Actions (SLA-based)
-- Dashboard Analytics
-- Critical Ticket Alerts
-- API Key System (Monetization-ready)
-- Downloadable Prediction Reports
+## ✨ Features
 
-------------------------------------------------------------
+- Real-time ticket risk prediction  
+- Batch CSV processing  
+- Explainable AI (human + SHAP-style)  
+- SLA-based recommended actions  
+- Dashboard analytics  
+- Critical ticket alerts  
+- API key system (SaaS-ready)  
+- Downloadable prediction reports  
 
-PROBLEM STATEMENT
+---
 
-Customer support teams must quickly decide:
-Which tickets need immediate attention vs standard handling?
+## 🧠 Key Insight
 
-This system classifies tickets into:
+The original dataset label (priority) performed like random guessing (~25% accuracy).
 
-Critical → Escalate immediately (5 min SLA)
-Medium → Same-day handling (1 hour SLA)
-Low → Standard queue (24-hour SLA)
-
-------------------------------------------------------------
-
-SYSTEM ARCHITECTURE
-
-Ticket Text + Metadata
-→ Preprocessing
-→ Hybrid Model (DistilBERT + Tabular NN)
-→ FastAPI Backend
-→ Streamlit UI
-→ Dashboard + Alerts + Batch Processing
-
-------------------------------------------------------------
-
-DATASET
-
-- 200,000 customer support tickets
-- 23 features (text + structured)
-
-Key features include:
-issue_description, customer_age, tenure, previous_tickets, complexity, etc.
-
-------------------------------------------------------------
-
-KEY INSIGHT
-
-Original label (priority) performed like random guessing (~25% accuracy).
-
-Solution:
-Engineered a business-driven risk score:
+### Solution: Label Engineering
 
 risk_score =
 2.0 * issue_complexity_score +
@@ -79,115 +45,126 @@ risk_score =
 0.01 * customer_tenure_months
 
 Converted into:
-Low, Medium, Critical
+Low / Medium / Critical
 
-------------------------------------------------------------
+---
 
-MODEL
+## 🤖 Model Architecture
 
-Hybrid architecture:
-- DistilBERT for text
-- Neural network for tabular data
-- Fusion layer for final prediction
+Text → DistilBERT → Embedding  
+Tabular → Neural Network → Embedding  
+→ Fusion → Risk Prediction  
 
-------------------------------------------------------------
+---
 
-PERFORMANCE
+## 📈 Performance
 
-Accuracy: 92.45%
-Macro F1: 92.39%
+Accuracy: 92.45%  
+Macro F1: 92.39%  
 
-------------------------------------------------------------
+---
 
-EXPLAINABILITY
+## 🔍 Explainability
 
-Human Explanation:
-High complexity + many tickets + urgent language → critical risk
+Human explanation example:  
+High complexity + many previous tickets + urgent language → critical risk  
 
-SHAP-style Explanation:
-- issue_complexity_score → high impact
-- previous_tickets → high impact
-- issue_description → high impact
+SHAP-style insights:
+- issue_complexity_score ↑  
+- previous_tickets ↑  
+- issue_description ↑  
 
-------------------------------------------------------------
+---
 
-API
+## ⚡ API
 
+Endpoint:
 POST /predict
 
 Returns:
-- risk
-- confidence
-- recommended_action
-- explanation
-- plan
+- risk  
+- confidence  
+- recommended_action  
+- explanation  
+- plan  
 
-------------------------------------------------------------
+---
 
-API KEY SYSTEM
+## 🖥️ UI Capabilities
 
-free-demo-key → free plan
-pro-demo-key → pro plan
+- Single ticket analyzer  
+- Batch upload  
+- Dashboard analytics  
+- Alert system  
 
-------------------------------------------------------------
+---
 
-STREAMLIT UI
+## 🚀 Production & SaaS Readiness
 
-- Single ticket analyzer
-- Batch upload
-- Dashboard analytics
-- Alerts system
+This system is designed with real-world deployment in mind:
 
-------------------------------------------------------------
+- API key authentication  
+- Scalable FastAPI backend  
+- Batch processing  
+- Dashboard analytics  
+- Explainable predictions  
 
-##  Production & SaaS Readiness
+Future Extensions:
+- JWT authentication  
+- Stripe payments  
+- Usage tracking  
+- PostgreSQL logging  
+- Slack/Zendesk integration  
 
-This system is designed with real-world deployment and monetization in mind.
+---
 
-Key capabilities include:
-- API key authentication for controlled access
-- Scalable FastAPI backend
-- Batch processing for enterprise use
-- Dashboard analytics for operational insights
-- Explainability for decision transparency
+## 🧩 Tech Stack
 
-Potential extensions:
-- User authentication (JWT)
-- Rate limiting & usage tracking
-- Stripe-based subscription billing
-- Database logging (PostgreSQL)
-- Integration with support platforms (Zendesk, Slack)
-------------------------------------------------------------
+Python  
+PyTorch  
+Transformers (HuggingFace)  
+FastAPI  
+Streamlit  
+Scikit-learn  
+Pandas  
 
-DEPLOYMENT
+---
 
-- Works locally
-- Render failed due to memory limits
-- Recommended: upgrade or use AWS/Railway
+## 🛠️ How to Run
 
-------------------------------------------------------------
+git clone <your-repo>  
+pip install -r requirements.txt  
 
-TECH STACK
+Run API:
+uvicorn app.api:app --reload  
 
-Python
-PyTorch
-Transformers (HuggingFace)
-FastAPI
-Streamlit
-Scikit-learn
-Pandas
+Run UI:
+streamlit run app/ui.py  
 
+---
 
-------------------------------------------------------------
+## 🚧 Deployment
 
-AUTHOR
+- Fully working locally  
+- Render free tier memory limitation  
 
-Prince Appiah
-PhD Data Science 
+Recommended:
+- Render (paid)
+- Railway
+- AWS / GCP  
 
-------------------------------------------------------------
+---
 
-FINAL NOTE
+## 👤 Author
+
+Prince Appiah  
+PhD Data Science  
+ 
+
+---
+
+## ⭐ Final Note
 
 This is not just a model.
-It is a production-style AI product prototype ready for real-world use.
+
+It is a production-style AI system designed for real-world deployment and SaaS applications.
